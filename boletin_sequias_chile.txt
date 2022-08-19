@@ -18,6 +18,7 @@ from django.http import HttpResponse
 from PIL import Image
 
 
+
 # portada
 def portada(presentacion, mes, year, pais, nombre):
     # poner en las dimsensiones 16x9
@@ -64,7 +65,8 @@ def cropPNGMap(img, border="y", tipo="SPI"):
     bottom = height  # Todos los mapas terminan en este pixel
     img_res = img.crop((0, top, width, bottom))
     img_res = imgToBlackNWhite(img_res)
-    # BUSCANDO EL PRIMER PIXEL NEGRO PARA SABER DONDE RECORTAR  #https://stackoverflow.com/questions/1109422/getting-list-of-pixel-values-from-pil
+    # BUSCANDO EL PRIMER PIXEL NEGRO PARA SABER DONDE RECORTAR
+    # #https://stackoverflow.com/questions/1109422/getting-list-of-pixel-values-from-pil
     pixels = img_res.load()
 
     left = -1
@@ -97,8 +99,9 @@ def imgToBlackNWhite(img):
     return r
 
 
-# Devuelve una imagen en formato base64 pero previamente la recorta para quitarle el encabezado. Será usado primordialmente para listar los lapsos de índices a un mes y año determinado.
-def sendBase64CropPNGMap(request, idIdx, wmode, year, month):
+# Devuelve una imagen en formato base64 pero previamente la recorta para quitarle el encabezado.
+# Será usado primordialmente para listar los lapsos de índices a un mes y año determinado.
+def sendBase64CropPNGMap (request, idIdx, wmode, year, month):
     if request.method == 'GET':
         mCol = "{:02d}".format(month)
         modeCol = "{:02d}".format(wmode)
@@ -249,11 +252,6 @@ def graph_serieTiempo(direccion, nombre):
     ax.set_xlabel("Fecha")
     plt.grid(linestyle='--')  # grilla para la grafica
     plt.ylim(0, 100)  # poner en y del 0-100
-    SMALL_SIZE = 8
-    MEDIUM_SIZE = 16
-    BIGGER_SIZE = 22
-
-
 
     # graficar las lineas apiladas
     colores = ["#FFFF40", "#FFDE6F", "#ECAA1C", "#E72C07", "#900B02"]
@@ -269,12 +267,7 @@ def graph_serieTiempo(direccion, nombre):
     D4_patch = mpatches.Patch(color="#900B02", label='D4')
     plt.xticks(datos_serie["fecha"], rotation=45, ha="right")  # formato de las fechas en x
 
-
     ax.xaxis.set_major_formatter(DateFormatter("%Y-%m"))
-    # colocar la caja abajo para la leyenda
-    #plt.legend(handles=[D0_patch, D1_patch, D2_patch, D3_patch, D4_patch], loc='upper center',
-              # bbox_to_anchor=(0.5, -0.15),
-               #fancybox=True, ncol=5, fontsize=14)
     for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
                  ax.get_xticklabels() + ax.get_yticklabels()):
         item.set_fontsize(16)
@@ -321,8 +314,6 @@ def diagrama_barras(year, mes, path_archivo):
                 "Valparaiso", "Metropolitana de Santiago", "Libertador Bernardo O'Higgins", "Maule",
                 "Ñuble","Bio-Bio","La Araucania", "Los Rios",
                 "Los Lagos", "Aysen del Gral.Ibañez del Campo","Magallanes y Antartica Chilena"]
-
-    #df_barras["Región"] = (df_barras["Región"].str.slice(start=9))
 
     df.reset_index()
     for i in range(len(regiones)):
@@ -459,7 +450,7 @@ def diap2(presentacion, nombre_ppt, pais):
     presentacion.save(nombre_ppt + ".pptx")
 
 
-# DIAPOSITIVA 2: CONDICIONES DE SEQUIA MES ANTERIOR
+# CONDICIONES DE SEQUIA MES ANTERIOR
 def diap3(presentacion, year, mes, dir, nombre_ppt, pais):
     nombre_img = str(year) + "_0" + str(mes - 1) + "_" + "01.png"
     third_Layout = presentacion.slide_layouts[5]
@@ -469,21 +460,8 @@ def diap3(presentacion, year, mes, dir, nombre_ppt, pais):
     mapa_texto(pais, presentacion, third_slide, titulo, path, nombre_ppt)
     presentacion.save(nombre_ppt + ".pptx")
 
-
-# CONDICIONES DE SEQUIA: MES
-def diap4(presentacion, year, mes, dir, nombre_ppt, pais):
-    third_Layout = presentacion.slide_layouts[5]
-    third_slide = presentacion.slides.add_slide(third_Layout)
-    nombre_img = str(year) + "_0" + str(mes) + "_" + "01.png"
-    titulo = "Condiciones de sequía -" + str(calcMonths(mes)) + " " + str(year)
-    direccion = dir + str("\\") + nombre_img
-    subtitulo(presentacion, nombre_ppt, third_slide, 0.5, 9, 1.25, 0.5, texto="Monitoreo preliminar")
-    mapa_texto(pais, presentacion, third_slide, titulo, direccion, nombre_ppt)
-    presentacion.save(nombre_ppt + ".pptx")
-
-
 # CONDICIONES DE SEQUIA: SERIE DE TIEMPO+TABLA
-def diap5(presentacion, dir_csv, nombre_ppt, pais):
+def diap4(presentacion, dir_csv, nombre_ppt, pais):
     fourth_Layout = presentacion.slide_layouts[5]
     fourth_slide = presentacion.slides.add_slide(fourth_Layout)
     encabezado(fourth_slide, "Condiciones de sequía", pais)
@@ -575,7 +553,7 @@ def diap5(presentacion, dir_csv, nombre_ppt, pais):
 
 
 # REGIONES: GRAFICO DE BARRAS
-def diap6(presentacion, dir, year, mes, nombre_ppt, pais):
+def diap5(presentacion, dir, year, mes, nombre_ppt, pais):
     fifth_Layout = presentacion.slide_layouts[5]
     fifth_slide = presentacion.slides.add_slide(fifth_Layout)
     encabezado(fifth_slide, "Porcentaje de sequía por regiones", pais)
@@ -605,7 +583,7 @@ def diap6(presentacion, dir, year, mes, nombre_ppt, pais):
 
 
 # SERIE DE MAPA: PERSISTENCIA DE SEQUIAS
-def diap7(presentacion, mes, year, dir, nombre_ppt, pais):
+def diap6(presentacion, mes, year, dir, nombre_ppt, pais):
     seventh_Layout = presentacion.slide_layouts[5]
     seventh_slide = presentacion.slides.add_slide(seventh_Layout)
     encabezado(seventh_slide, "Persistencia de Sequías", pais)
@@ -666,7 +644,7 @@ def diap7(presentacion, mes, year, dir, nombre_ppt, pais):
 
 
 # SPI: MAPAS
-def diap9(presentacion, nombre_ppt, dir, mes, year, pais):
+def diap7(presentacion, nombre_ppt, dir, mes, year, pais):
     eigth_Layout = presentacion.slide_layouts[5]
     eigth_slide = presentacion.slides.add_slide(eigth_Layout)
     encabezado(eigth_slide, "Persistencia del índice estandarizado de precipitación (SPI)", pais)
@@ -727,7 +705,7 @@ def diap9(presentacion, nombre_ppt, dir, mes, year, pais):
 
 
 # LOGO DE LA INSTITUCION
-def diap10(presentacion, nombre_ppt, pais):
+def diap8(presentacion, nombre_ppt, pais):
     tenth_layout = presentacion.slide_layouts[6]
     tenth_slide = presentacion.slides.add_slide(tenth_layout)
 
@@ -758,15 +736,21 @@ def diap10(presentacion, nombre_ppt, pais):
     presentacion.save(nombre_ppt + ".pptx")
 
 
-##ELABORACION DEL BOLETIN
+##ELABORACION DEL BOLETIN: debe tener una presentacion llamada ppt
+
+"PPT"
+"DATOS"
+month = 6
+year = 2021
+pais = "chile"
 
 
 def boletin_sequias_chile(year, month):
     pais = "Chile"
-    direccion_mapas = r'C:\Users\NATHI\Documents\ciifen\Boletin Sequias\CHILE MONITOR JUNIO2022'
-    direccion_datos = r"C:\Users\NATHI\Documents\ciifen\Boletin Sequias\national.csv"
-    direccion_SPI = r"C:\Users\NATHI\Documents\ciifen\insumos\insumos\CHILE SPI JUNIO2022"
-    direccion_stats = r"C:\Users\NATHI\Documents\ciifen\Boletin Sequias\stats\stats"
+    direccion_mapas = r'C:\Users\'
+    direccion_datos = r"C:\Users\"
+    direccion_SPI = r"C:\Users\"
+    direccion_stats = r"C:\Users\"
 
     name_ppt = "Boletin_Sequias_" + pais
     ppt = Presentation()
@@ -780,21 +764,15 @@ def boletin_sequias_chile(year, month):
 
     diap3(ppt, year, month, direccion_mapas, name_ppt, pais)  # mapa mes pasado
 
-    diap6(ppt, direccion_stats, year, month, name_ppt, pais)  # mapa regiones: condiciones de sequia
+    diap5(ppt, direccion_stats, year, month, name_ppt, pais)  # mapa regiones: condiciones de sequia
 
-    diap5(ppt, direccion_datos, name_ppt, pais)  # mapa serie de tiempo: condiciones de sequia
+    diap4(ppt, direccion_datos, name_ppt, pais)  # mapa serie de tiempo: condiciones de sequia
 
-    diap7(ppt, month, year, direccion_mapas, name_ppt, pais)  # serie de mapas: persistencia de sequia
+    diap6(ppt, month, year, direccion_mapas, name_ppt, pais)  # serie de mapas: persistencia de sequia
 
-    diap9(ppt, name_ppt, direccion_SPI, month, year, pais)  # mapas SPI
+    diap7(ppt, name_ppt, direccion_SPI, month, year, pais)  # mapas SPI
 
-    diap10(ppt, name_ppt, pais)  # logo de entidad meteorologica del pais
+    diap8(ppt, name_ppt, pais)  # logo de entidad meteorologica del pais
 
-
-"PPT"
-"DATOS"
-month = 6
-year = 2021
-pais = "chile"
 
 boletin_sequias_chile(year, month)
