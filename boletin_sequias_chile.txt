@@ -29,7 +29,8 @@ def portada(presentacion, mes, year, pais, nombre):
     Layout = presentacion.slide_layouts[0]
     first_slide = presentacion.slides.add_slide(Layout)
     logo = "logo-" + pais + ".png"
-    picture = first_slide.shapes.add_picture('LOGOS.png', Inches(9.6), Inches(7.75), Inches(6.25), Inches(1.15))
+    first_slide.shapes.add_picture('logo_ciifen.png', Inches(9.7), Inches(7.75), Inches(1.2), Inches(1.15))
+    first_slide.shapes.add_picture('logo_EU.png', Inches(10.95), Inches(7.75), Inches(5), Inches(1.15))
     log = first_slide.shapes.add_picture(logo, Inches(8.5), Inches(7.75), height=Inches(1.15))
     first_slide.shapes.title.text = "RESUMEN DEL MONITOR DE SEQUÍAS PARA " + pais.upper()
     first_slide.placeholders[1].text = str(mes) + ' ' + str(year)
@@ -47,7 +48,8 @@ def portada(presentacion, mes, year, pais, nombre):
 
 # encabezado: a partir de la diap 2
 def encabezado(slide, titulo, pais):
-    picture = slide.shapes.add_picture('LOGOS.png', Inches(11.5), Inches(0.15), height=Inches(0.75))
+    slide.shapes.add_picture('logo_ciifen.png', Inches(11.5), Inches(0.15),height= Inches(0.75))
+    slide.shapes.add_picture('logo_EU.png', Inches(12.5), Inches(0.15), height=Inches(0.75))
     logo = "logo-" + pais + ".png"
     log = slide.shapes.add_picture(logo, Inches(10.5), Inches(0.15), Inches(0.75))
     title1 = slide.shapes.title
@@ -730,7 +732,8 @@ def diap8(presentacion, nombre_ppt, pais):
     hlink.address = 'http://www.meteochile.gob.cl/PortalDMC-web/index.xhtml'
     font = r.font
     font.size = Pt(25)
-    tenth_slide.shapes.add_picture("LOGOS.png", Inches(4.25), Inches(5), height=Inches(1.75))
+    tenth_slide.shapes.add_picture('logo_ciifen.png', Inches(4.25), Inches(5), height=Inches(1.75))
+    tenth_slide.shapes.add_picture('logo_EU.png', Inches(6.05), Inches(5), height=Inches(1.75))
     logo = "logo-" + pais.lower() + ".png"
     tenth_slide.shapes.add_picture(logo, Inches(2.25), Inches(5), height=Inches(1.75))
     presentacion.save(nombre_ppt + ".pptx")
