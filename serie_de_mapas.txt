@@ -1,0 +1,60 @@
+def serie_de_mapas (presentacion,nombre_ppt,slide,dir,mes,year,tipo_mapa,lapso_meses= ["01", "03", "06", "09", "12", "24", "48"]):
+    mapasSPI = os.listdir(dir)
+    xinicial = 1.25
+    altura_mapa = 5.5
+    yinicial = 2.25
+    for l in lapso_meses:
+        str_mes="0"+str(mes)
+        if tipo_mapa=="SPI":
+            nombre_mapa = str(year) + "_" + str_mes[-2:] + "_" + l + "_spi.png"
+        else:
+            nombre_mapa = str(year) + "_" + str_mes[-2:] + "_" + l + ".png"
+        try:
+            if mapasSPI.index(nombre_mapa) >= 0:
+                path = dir + str("\\") + nombre_mapa
+                if lapso_meses.index(l)==0:
+                    subt = calcMonths(mes)[:3] + " " + str(year)
+
+                    ancho = mapa_sin_leyenda(presentacion, nombre_ppt, slide, path, xinicial, yinicial, altura_mapa,
+                                             "SPI_1.png")
+                    subtitulo(presentacion, nombre_ppt, slide, xinicial, ancho, top=yinicial - 0.5, height=0.25,
+                              texto=subt, fuente=14)
+                    subtitulo(presentacion, nombre_ppt, slide, xinicial, ancho, top=yinicial - 0.3, height=0.25,
+                              texto="1 mes", fuente=14)
+                    xinicial += ancho + 0.15
+                elif 0<lapso_meses.index(l) < len(lapso_meses) - 1:
+
+                    script_dir = sys.path[0]
+                    img_path = os.path.join(script_dir, path)
+
+                    im = Image.open(img_path)
+                    img_res = cropPNGMap(im, "n")
+
+                    img_res.save("mapa.png")
+                    spi = slide.shapes.add_picture("mapa.png", Inches(xinicial), Inches(yinicial),
+                                                           height=Inches(altura_mapa))
+                    ancho = spi.width / 914400
+                    n = int(l)
+                    if n < 12:
+                        subt = rango_mes(mes, year, n)
+                    elif n == 12:
+                        subt = calcMonths(mes)[:3] + " " + str(year - 1) + "- " + calcMonths(mes)[:3] + " " + str(year)
+                    elif n > 12:
+                        subt = calcMonths(mes)[:3] + " " + str(year - n // 12) + "- " + calcMonths(mes)[:3] + " " + str(year)
+                    subtitulo(presentacion, nombre_ppt, slide, xinicial, ancho, top=yinicial - 0.5, height=0.25,
+                              texto=subt, fuente=14)
+                    subtitulo(presentacion, nombre_ppt, slide, xinicial, ancho, top=yinicial - 0.3, height=0.25,
+                              texto=str(n) + " meses", fuente=14)
+                    xinicial += ancho + 0.15
+                elif lapso_meses.index(l) == len(lapso_meses) - 1:
+                    n = int(l)
+                    subt = calcMonths(mes)[:3] + " " + str(year - n // 12) + "- " + calcMonths(mes)[:3] + " " + str(year)
+                    ancho = mapa_subtitulo(presentacion, nombre_ppt, slide, path, xinicial, yinicial, altura_mapa,type=tipo_mapa, texto=subt, altura_sub=yinicial - 0.5, fuente=14)
+                    subtitulo(presentacion, nombre_ppt, slide, xinicial, ancho, top=yinicial - 0.3, height=0.25,
+                              texto=str(n) + " meses", fuente=14)
+                    xinicial += ancho + 0.15
+        except ValueError:
+            print("Falta imagen de mapa: "+ nombre_mapa)
+            pass
+        presentacion.save(nombre_ppt + ".pptx")
+    os.remove("mapa.png")
