@@ -1,6 +1,5 @@
 # boletin ppt
 import pandas as pd
-import dataframe_image as dfi
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import sys, os
@@ -50,6 +49,7 @@ def portada(presentacion, mes, year, pais, nombre):
 def encabezado(slide, titulo, pais):
     slide.shapes.add_picture('logo_ciifen.png', Inches(11.5), Inches(0.15),height= Inches(0.75))
     slide.shapes.add_picture('logo_EU.png', Inches(12.5), Inches(0.15), height=Inches(0.75))
+    #picture = slide.shapes.add_picture('LOGOS.png', Inches(11.5), Inches(0.15), height=Inches(0.75))
     logo = "logo-" + pais + ".png"
     log = slide.shapes.add_picture(logo, Inches(10.5), Inches(0.15), Inches(0.75))
     title1 = slide.shapes.title
@@ -274,6 +274,7 @@ def graph_serieTiempo(direccion, nombre):
                  ax.get_xticklabels() + ax.get_yticklabels()):
         item.set_fontsize(16)
     plt.tight_layout()
+
     plt.savefig(nombre)
 
 
@@ -356,6 +357,83 @@ def diagrama_barras(year, mes, path_archivo):
 
     return nombre
 
+#realizar la tabla de porcentajes y guardar como png
+def tabla_porcentajes(tabla,colores = ["#FFFF40", "#FFDE6F", "#ECAA1C", "#E72C07", "#900B02"]):
+    # poner el plano
+    fig, ax = plt.subplots(figsize=(12, 4))
+    rows = 5
+    cols = 12
+    # delimitar el sistema coordenadas, un buffer por visualizacion
+    ax.set_ylim(-0.75, rows-1)
+    ax.set_xlim(-3.75, cols * 2 + .25)
+    # poner los valores de los ultimos tres meses
+    for fila in range(0, 3):
+        f = tabla.tail(3).iloc[fila]
+        for i in range(0, 24, 2):
+            if i == 0:
+                x = -1.5
+                texto = f.iloc[i // 2]
+            elif 2 < i <= 12:
+                x = i + 1
+                texto = "{:.1f}".format(f.iloc[i // 2])
+            else:
+                x = i + 0.5
+                texto = "{:.1f}".format(f.iloc[i // 2])
+
+            ax.text(x, y=2 - fila, s=texto, va='center', ha='center', fontsize=13)
+
+    # sacar los nombres de las columnas
+    column_names_lvl0 = list(tabla.columns.get_level_values(0))
+    column_names_lvl1 = list(tabla.columns.get_level_values(1))
+    # poner los titulos de categoria acumulada y segregada
+    ax.text(10.5, 3.25, column_names_lvl0[0], weight='bold', ha='center')
+    ax.text(18.5, 3.25, column_names_lvl0[-1], weight='bold', ha='center')
+
+    # poner titulos de cada columna
+    for i in range(0, 24, 2):
+        if i == 0:
+            x = -1.5
+        elif i == 2:
+            x = i
+        elif 2 < i <= 12:
+            x = i + 1
+        else:
+            x = i + 0.5
+        ax.text(x, 2.75, column_names_lvl1[i // 2], weight='bold', ha='center')
+
+    # formato de tabla
+    # colores de celdas: clasificacion
+
+    x = 4
+    for cuadro in range(0, 10):
+        if cuadro < 4:
+            rect = mpatches.Rectangle((x, 2.55), 2, 0.6, ec='none', fc=colores[cuadro], alpha=.75, zorder=-1)
+            ax.plot([x, x], [-0.5, 3], ls=':', lw='.5', c='grey')
+            x += 2
+        elif cuadro == 4:
+            rect = mpatches.Rectangle((x, 2.55), 1.5, 0.6, ec='none', fc=colores[cuadro], alpha=.75, zorder=-1)
+            ax.plot([x, x], [-0.5, 3], ls=':', lw='.5', c='grey')
+            x += 1.5
+        else:
+            rect = mpatches.Rectangle((x, 2.55), 2, 0.6, ec='none', fc=colores[cuadro - 5], alpha=.75, zorder=-1)
+            ax.plot([x, x], [-0.5, 3], ls=':', lw='.5', c='grey')
+            x += 2
+
+        ax.add_patch(rect)
+
+    # lineas entre filas
+    for row in range(rows - 1):
+        ax.plot([-3.15, 23.5], [row - 0.5, row - 0.5], ls=':', lw='.5', c='grey')
+    #lineas solidas de borde
+    ax.plot([13.5, 13.5], [-0.5, 3.75], ls='solid', lw='.5', c='grey')
+    ax.plot([23.5, 23.5], [-0.5, 3.75], ls='solid', lw='.5', c='black')
+    ax.plot([-3.15, -3.15], [-0.5, 3.75], ls='solid', lw='.5', c='black')
+    ax.plot([-3.15, 23.5], [3.75, 3.75], ls='solid', lw='.5', c='black')
+    ax.plot([-3.15, 23.5], [-0.5, -0.5], ls='solid', lw='.5', c='black')
+    ax.axis('off')
+    nombre_tabla="tabla_de_datos.png"
+    plt.savefig(nombre_tabla, bbox_inches='tight', pad_inches=0)
+    return nombre_tabla
 
 # poner la leyenda de los colores
 def leyendas_colores(slide, categoria, colores, x, y, cuadro=0.6, espaciamientox=1, espaciamientoy=1.25, x2=0,
@@ -420,6 +498,67 @@ def leyendas_colores(slide, categoria, colores, x, y, cuadro=0.6, espaciamientox
             yinicial = y
             xinicial += x2
 
+#colocar una serie de mapas, uno al lado del otro
+def serie_de_mapas (presentacion,nombre_ppt,slide,dir,mes,year,tipo_mapa,lapso_meses= ["01", "03", "06", "09", "12", "24", "48"]):
+    mapasSPI = os.listdir(dir)
+    xinicial = 1.25
+    altura_mapa = 5.5
+    yinicial = 2.25
+    for l in lapso_meses:
+        str_mes="0"+str(mes)
+        if tipo_mapa=="SPI":
+            nombre_mapa = str(year) + "_" + str_mes[-2:] + "_" + l + "_spi.png"
+        else:
+            nombre_mapa = str(year) + "_" + str_mes[-2:] + "_" + l + ".png"
+        try:
+            if mapasSPI.index(nombre_mapa) >= 0:
+                path = dir + str("\\") + nombre_mapa
+                if lapso_meses.index(l)==0:
+                    subt = calcMonths(mes)[:3] + " " + str(year)
+
+                    ancho = mapa_sin_leyenda(presentacion, nombre_ppt, slide, path, xinicial, yinicial, altura_mapa,
+                                             "SPI_1.png")
+                    subtitulo(presentacion, nombre_ppt, slide, xinicial, ancho, top=yinicial - 0.5, height=0.25,
+                              texto=subt, fuente=14)
+                    subtitulo(presentacion, nombre_ppt, slide, xinicial, ancho, top=yinicial - 0.3, height=0.25,
+                              texto="1 mes", fuente=14)
+                    xinicial += ancho + 0.15
+                elif 0<lapso_meses.index(l) < len(lapso_meses) - 1:
+
+                    script_dir = sys.path[0]
+                    img_path = os.path.join(script_dir, path)
+
+                    im = Image.open(img_path)
+                    img_res = cropPNGMap(im, "n")
+
+                    img_res.save("mapa.png")
+                    spi = slide.shapes.add_picture("mapa.png", Inches(xinicial), Inches(yinicial),
+                                                           height=Inches(altura_mapa))
+                    ancho = spi.width / 914400
+                    n = int(l)
+                    if n < 12:
+                        subt = rango_mes(mes, year, n)
+                    elif n == 12:
+                        subt = calcMonths(mes)[:3] + " " + str(year - 1) + "- " + calcMonths(mes)[:3] + " " + str(year)
+                    elif n > 12:
+                        subt = calcMonths(mes)[:3] + " " + str(year - n // 12) + "- " + calcMonths(mes)[:3] + " " + str(year)
+                    subtitulo(presentacion, nombre_ppt, slide, xinicial, ancho, top=yinicial - 0.5, height=0.25,
+                              texto=subt, fuente=14)
+                    subtitulo(presentacion, nombre_ppt, slide, xinicial, ancho, top=yinicial - 0.3, height=0.25,
+                              texto=str(n) + " meses", fuente=14)
+                    xinicial += ancho + 0.15
+                elif lapso_meses.index(l) == len(lapso_meses) - 1:
+                    n = int(l)
+                    subt = calcMonths(mes)[:3] + " " + str(year - n // 12) + "- " + calcMonths(mes)[:3] + " " + str(year)
+                    ancho = mapa_subtitulo(presentacion, nombre_ppt, slide, path, xinicial, yinicial, altura_mapa,type=tipo_mapa, texto=subt, altura_sub=yinicial - 0.5, fuente=14)
+                    subtitulo(presentacion, nombre_ppt, slide, xinicial, ancho, top=yinicial - 0.3, height=0.25,
+                              texto=str(n) + " meses", fuente=14)
+                    xinicial += ancho + 0.15
+        except ValueError:
+            print("Falta imagen de mapa: "+ nombre_mapa)
+            pass
+        presentacion.save(nombre_ppt + ".pptx")
+    os.remove("mapa.png")
 
 ## FUNCIONES PARA CADA DIAPOSITIVA
 def diap1(presentacion, mes, pais, nombre_ppt, year):
@@ -498,32 +637,6 @@ def diap4(presentacion, dir_csv, nombre_ppt, pais):
         m = fecha[1]
         t = calcMonths(int(m)) + " " + a
         tabla.iloc[i, 0] = t
-
-    headers = [dict(selector='th:nth-child(5n-2)',
-                    props=[('text-align', 'center'), ('color', 'black'), ('background-color', '#FFFF40')]),
-               dict(selector='th:nth-child(5n-1)',
-                    props=[('text-align', 'center'), ('color', 'black'), ('background-color', '#FFDE6F')]),
-               dict(selector='th:nth-child(5n)',
-                    props=[('text-align', 'center'), ('color', 'black'), ('background-color', '#ECAA1C')]),
-               dict(selector='th:nth-child(5n+1)',
-                    props=[('text-align', 'center'), ('color', 'black'), ('background-color', '#E72C07')]),
-               dict(selector='th:nth-child(5n+2)',
-                    props=[('text-align', 'center'), ('color', 'white'), ('background-color', '#900B02')]),
-               dict(selector='th:nth-child(1)',
-                    props=[('text-align', 'center'), ('color', 'black'), ('background-color', 'white')]),
-               dict(selector='th:nth-child(2)',
-                    props=[('text-align', 'center'), ('color', 'black'), ('background-color', 'white')]),
-               dict(selector="th, td",props=[("border-bottom","1px solid #ddd")]),
-               dict(selector="td, th", props=[("border-right", "1px solid black")]),
-               dict(selector="th:not(:last-child)", props=[('text-align', 'right'), ("border-bottom","1px solid black")]),
-               dict(selector="th", props=[ ("border-bottom","1px solid black")])
-               ]
-
-    df = tabla.tail(3).style.set_table_styles(headers)
-    df.format(decimal=".", precision=1, na_rep="0")
-    df.set_properties(**{'text-align': 'center'}).hide(axis='index')
-    pd.set_option('colheader_justify', 'center')
-    dfi.export(df, 'tabla1.png')
     ancho = 8
 
     # agregar grafica
@@ -543,14 +656,15 @@ def diap4(presentacion, dir_csv, nombre_ppt, pais):
     leyendas_colores(fourth_slide, categoria, colores, ancho + 0.1, yinicial + 0.35, abreviaturas=abr, cuadro=0.4,
                      espaciamientox=0.051, espaciamientoy=0.051, fuente=12)
     altura_serie = serie.height / 914400
-    # tabla
-    porcentajes = fourth_slide.shapes.add_picture("tabla1.png", Inches(0.5), Inches(altura_serie + yinicial + 0.2),
-                                                  width=Inches(ancho))
+
+    #agregar  tabla a diapositiva{
+    tabla_porcentajes(tabla)
+    porcentajes = fourth_slide.shapes.add_picture("tabla_de_datos.png", Inches(0.5), Inches(altura_serie + yinicial), width=Inches(9))
 
     analisis_placeholder(presentacion, fourth_slide, nombre_ppt, left=ancho + 2.3, top=1.25, width=15.5 - ancho - 2,
                          height_total=7.25)
 
-    os.remove("tabla1.png")
+    os.remove("tabla_de_datos.png")
     presentacion.save(nombre_ppt + ".pptx")
 
 
@@ -590,59 +704,12 @@ def diap6(presentacion, mes, year, dir, nombre_ppt, pais):
     seventh_slide = presentacion.slides.add_slide(seventh_Layout)
     encabezado(seventh_slide, "Persistencia de Sequías", pais)
     cuadro_texto(presentacion, seventh_slide, nombre_ppt, 1.75, 8, height=1, top=8)
+    lapso_meses = ["01", "03", "06", "09", "12", "24", "48"]
+    serie_de_mapas(presentacion, nombre_ppt, seventh_slide, dir, mes, year, "PS", lapso_meses)
 
-    mapasSPI = os.listdir(dir)
-    xinicial = 1.25
-    altura_mapa = 5.5
-    yinicial = 2.25
-    for mapa in mapasSPI:
-        path = dir + str("\\") + mapa
-        if mapasSPI.index(mapa) == 1:
-            subt = calcMonths(mes)[:3] + " " + str(year)
 
-            ancho = mapa_sin_leyenda(presentacion, nombre_ppt, seventh_slide, path, xinicial, yinicial, altura_mapa,
-                                     "SPI_1.png")
-            subtitulo(presentacion, nombre_ppt, seventh_slide, xinicial, ancho, top=yinicial - 0.5, height=0.25,
-                      texto=subt, fuente=14)
-            subtitulo(presentacion, nombre_ppt, seventh_slide, xinicial, ancho, top=yinicial - 0.3, height=0.25,
-                      texto="1 mes", fuente=14)
-            xinicial += ancho + 0.15
-        elif 0 < mapasSPI.index(mapa) < len(mapasSPI) - 1:
 
-            script_dir = sys.path[0]
-            img_path = os.path.join(script_dir, path)
-
-            im = Image.open(img_path)
-            img_res = cropPNGMap(im, "n")
-
-            img_res.save("mapa.png")
-            spi = seventh_slide.shapes.add_picture("mapa.png", Inches(xinicial), Inches(yinicial),
-                                                   height=Inches(altura_mapa))
-            ancho = spi.width / 914400
-            n = int((mapa.split("_")[2]).split(".")[0])
-            if n < 12:
-                subt = rango_mes(mes, year, n)
-            elif n == 12:
-                subt = calcMonths(mes)[:3] + " " + str(year - 1) + "- " + calcMonths(mes)[:3] + " " + str(year)
-            elif n > 12:
-                subt = calcMonths(mes)[:3] + " " + str(year - n // 12) + "- " + calcMonths(mes)[:3] + " " + str(year)
-            subtitulo(presentacion, nombre_ppt, seventh_slide, xinicial, ancho, top=yinicial - 0.5, height=0.25,
-                      texto=subt, fuente=14)
-            subtitulo(presentacion, nombre_ppt, seventh_slide, xinicial, ancho, top=yinicial - 0.3, height=0.25,
-                      texto=str(n) + " meses", fuente=14)
-            xinicial += ancho + 0.15
-        elif mapasSPI.index(mapa) == len(mapasSPI) - 1:
-            n = int((mapa.split("_")[2]).split(".")[0])
-            subt = calcMonths(mes)[:3] + " " + str(year - n // 12) + "- " + calcMonths(mes)[:3] + " " + str(year)
-            ancho = mapa_subtitulo(presentacion, nombre_ppt, seventh_slide, path, xinicial, yinicial, altura_mapa,type="p", texto=subt, altura_sub=yinicial - 0.5, fuente=14)
-            subtitulo(presentacion, nombre_ppt, seventh_slide, xinicial, ancho, top=yinicial - 0.3, height=0.25,
-                      texto=str(n) + " meses", fuente=14)
-            xinicial += ancho + 0.15
-
-        presentacion.save(nombre_ppt + ".pptx")
-    os.remove("mapa.png")
     presentacion.save(nombre_ppt + ".pptx")
-
 
 
 # SPI: MAPAS
@@ -651,58 +718,8 @@ def diap7(presentacion, nombre_ppt, dir, mes, year, pais):
     eigth_slide = presentacion.slides.add_slide(eigth_Layout)
     encabezado(eigth_slide, "Persistencia del índice estandarizado de precipitación (SPI)", pais)
     cuadro_texto(presentacion, eigth_slide, nombre_ppt, 1.75, 8, height=1, top=8)
-
-    mapasSPI = os.listdir(dir)
-    xinicial = 1
-    altura_mapa = 5.5
-    yinicial = 2.25
-    for mapa in mapasSPI:
-        path = dir + str("\\") + mapa
-        if mapasSPI.index(mapa) == 0:
-            subt = calcMonths(mes)[:3] + " " + str(year)
-
-            ancho = mapa_sin_leyenda(presentacion, nombre_ppt, eigth_slide, path, xinicial, yinicial, altura_mapa,
-                                     "SPI_1.png")
-            subtitulo(presentacion, nombre_ppt, eigth_slide, xinicial, ancho, top=yinicial - 0.5, height=0.25,
-                      texto=subt, fuente=14)
-            subtitulo(presentacion, nombre_ppt, eigth_slide, xinicial, ancho, top=yinicial - 0.3, height=0.25,
-                      texto="1 mes", fuente=14)
-            xinicial += ancho + 0.15
-        elif mapasSPI.index(mapa) < len(mapasSPI) - 1:
-
-            script_dir = sys.path[0]
-            img_path = os.path.join(script_dir, path)
-
-            im = Image.open(img_path)
-            img_res = cropPNGMap(im, "n")
-
-            img_res.save("mapa.png")
-            spi = eigth_slide.shapes.add_picture("mapa.png", Inches(xinicial), Inches(yinicial),
-                                                 height=Inches(altura_mapa))
-            ancho = spi.width / 914400
-            n = int(mapa.split("_")[2])
-            if n < 12:
-                subt = rango_mes(mes, year, n)
-            elif n == 12:
-                subt = calcMonths(mes)[:3] + " " + str(year - 1) + "- " + calcMonths(mes)[:3] + " " + str(year)
-            elif n > 12:
-                subt = calcMonths(mes)[:3] + " " + str(year - n // 12) + "- " + calcMonths(mes)[:3] + " " + str(year)
-            subtitulo(presentacion, nombre_ppt, eigth_slide, xinicial, ancho, top=yinicial - 0.5, height=0.25,
-                      texto=subt, fuente=14)
-            subtitulo(presentacion, nombre_ppt, eigth_slide, xinicial, ancho, top=yinicial - 0.3, height=0.25,
-                      texto=str(n) + " meses", fuente=14)
-            xinicial += ancho + 0.15
-        elif mapasSPI.index(mapa) == len(mapasSPI) - 1:
-            n = int(mapa.split("_")[2])
-            subt = calcMonths(mes)[:3] + " " + str(year - n // 12) + "- " + calcMonths(mes)[:3] + " " + str(year)
-            ancho = mapa_subtitulo(presentacion, nombre_ppt, eigth_slide, path, xinicial, yinicial, altura_mapa,
-                                   type="SPI", texto=subt, altura_sub=yinicial - 0.5, fuente=14)
-            subtitulo(presentacion, nombre_ppt, eigth_slide, xinicial, ancho, top=yinicial - 0.3, height=0.25,
-                      texto=str(n) + " meses", fuente=14)
-            xinicial += ancho + 0.15
-
-        presentacion.save(nombre_ppt + ".pptx")
-    os.remove("mapa.png")
+    lapso_meses=["01","03","06","09","12","24","48"]
+    serie_de_mapas(presentacion,nombre_ppt,eigth_slide,dir,mes,year,"SPI",lapso_meses)
     presentacion.save(nombre_ppt + ".pptx")
 
 
